@@ -51,14 +51,11 @@ class SecurityServiceTest {
         @Test
         @DisplayName("Should throw exception when principal's user id is null")
         void givenDifferentUserId_whenCanCreateOrder_thenThrowsException() {
-            // Given
-            var userId = UUID.randomUUID();
-
             var request = new OrderCreateRequest(UUID.randomUUID(), new ArrayList<>());
 
             // When, Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canCreateOrder(null, request));
+                    () -> securityService.canCreateOrder(UUID.randomUUID().toString(), request));
         }
 
         @Test
@@ -149,18 +146,18 @@ class SecurityServiceTest {
     }
 
     @Nested
-    @DisplayName("Ability of updating order")
+    @DisplayName("Ability of managing order")
     class CanUpdateOrderTests {
         @Test
         @DisplayName("Should update order when it belongs to the principal and status is created")
-        void givenOrderBelongsToUserAndStatusIsCreated_whenCanUpdateOrder_thenReturnTrue() {
+        void givenOrderBelongsToUserAndStatusIsCreated_whenCanManageOrder_thenReturnTrue() {
             // Given
             var userId = UUID.randomUUID();
             var order = getOrder(userId);
 
             // When
             when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
-            var result = securityService.canUpdateOrder(userId.toString(), order.getId());
+            var result = securityService.canManageOrder(userId.toString(), order.getId());
 
             // Then
             assertTrue(result);
@@ -168,7 +165,7 @@ class SecurityServiceTest {
 
         @Test
         @DisplayName("Should throw exception when order does not belong to the principal")
-        void givenOrderDoesNotBelongToUser_whenCanUpdateOrder_thenThrowsException() {
+        void givenOrderDoesNotBelongToUser_whenCanManageOrder_thenThrowsException() {
             // Given
             var userId = UUID.randomUUID();
             var order = getOrder(UUID.randomUUID());
@@ -178,12 +175,12 @@ class SecurityServiceTest {
 
             // Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canUpdateOrder(userId.toString(), order.getId()));
+                    () -> securityService.canManageOrder(userId.toString(), order.getId()));
         }
 
         @Test
         @DisplayName("Should throw exception when order status is not CREATED")
-        void givenOrderStatusIsNotCreated_whenCanUpdateOrder_thenThrowsException() {
+        void givenOrderStatusIsNotCreated_whenCanManageOrder_thenThrowsException() {
             // Given
             var userId = UUID.randomUUID();
             var order = getOrder(userId);
@@ -194,23 +191,23 @@ class SecurityServiceTest {
 
             // Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canUpdateOrder(userId.toString(), order.getId()));
+                    () -> securityService.canManageOrder(userId.toString(), order.getId()));
         }
 
         @Test
         @DisplayName("Should throw exception when principal's user id is null")
-        void givenNoUserId_whenCanUpdateOrder_thenThrowsException() {
+        void givenNoUserId_whenCanManageOrder_thenThrowsException() {
             // Given, When, Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canUpdateOrder(null, UUID.randomUUID()));
+                    () -> securityService.canManageOrder(null, UUID.randomUUID()));
         }
 
         @Test
         @DisplayName("Should throw exception when order id is null")
-        void givenNoOrderId_whenCanUpdateOrder_thenThrowsException() {
+        void givenNoOrderId_whenCanManageOrder_thenThrowsException() {
             // Given, When, Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canUpdateOrder(UUID.randomUUID().toString(), null));
+                    () -> securityService.canManageOrder(UUID.randomUUID().toString(), null));
         }
     }
 

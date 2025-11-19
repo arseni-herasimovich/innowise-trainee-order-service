@@ -50,7 +50,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @securityService.canUpdateOrder(authentication.principal, #id)")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.canManageOrder(authentication.principal, #id)")
     public ResponseEntity<ApiResponse<OrderResponse>> update(
             @PathVariable UUID id,
             @RequestBody @Valid OrderUpdateRequest request) {
@@ -66,7 +66,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @securityService.canAccessOrder(authentication.principal, #id)")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.canManageOrder(authentication.principal, #id)")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         orderService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Order deleted"));

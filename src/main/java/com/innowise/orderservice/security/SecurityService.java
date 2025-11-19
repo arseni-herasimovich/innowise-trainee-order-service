@@ -36,16 +36,16 @@ public class SecurityService {
                 .orElseThrow(() -> new AccessDeniedException("You do not have rights to access this order"));
     }
 
-    public boolean canUpdateOrder(String userId, UUID orderId) {
+    public boolean canManageOrder(String userId, UUID orderId) {
         if (userId == null || orderId == null) {
-            throw new AccessDeniedException("You do not have rights to update this order");
+            throw new AccessDeniedException("You do not have rights to manage this order");
         }
 
         return orderRepository.findById(orderId)
                 .filter(order -> order.getUserId().toString().equals(userId))
                 .filter(order -> order.getStatus().equals(OrderStatus.CREATED))
                 .map(order -> true)
-                .orElseThrow(() -> new AccessDeniedException("You do not have rights to update this order"));
+                .orElseThrow(() -> new AccessDeniedException("You do not have rights to manage this order"));
     }
 
     public boolean canAccessOrders(String userId, List<UUID> orderIds) {
