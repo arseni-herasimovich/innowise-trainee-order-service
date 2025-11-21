@@ -1,0 +1,19 @@
+spring:
+    profiles:
+        active: local
+    application:
+        name: order-service
+    liquibase:
+        change-log: classpath:db/changelog/master.yaml
+        enabled: true
+    jpa:
+        open-in-view: false
+resilience4j:
+  circuitbreaker:
+    instances:
+        user-service:
+            failure-rate-threshold: 30
+            slow-call-rate-threshold: 90
+            wait-duration-in-open-state: 15s
+            permitted-number-of-calls-in-half-open-state: 5
+            minimum-number-of-calls: 30

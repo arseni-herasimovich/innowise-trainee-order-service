@@ -1,0 +1,41 @@
+services:
+  order-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: innowise/internship/order-service
+    ports:
+      - '8083:8080'
+    depends_on:
+      - order-service-db
+    networks:
+      - backend-net
+      - order-service-net
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - APP_LOGGING_LEVEL=debug
+      - DB_HOST=order-service-db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+
+  order-service-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - order-service-net
+    volumes:
+      - order-service-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  order-service-postgres-data: {}
+
+networks:
+  backend-net:
+    external: true
+  order-service-net:
+    driver: bridge
