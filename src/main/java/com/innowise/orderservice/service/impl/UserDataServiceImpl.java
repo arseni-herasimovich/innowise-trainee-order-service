@@ -25,6 +25,7 @@ public class UserDataServiceImpl implements UserDataService {
                 log.debug("Successfully fetched user data for user ID: {}", userId);
                 return response.getData();
             }
+            log.debug("Fetching user data failed: {}", response);
         } catch (FeignException e) {
             log.debug("Error while fetching user info for user ID: {}", userId, e);
         }
