@@ -3,9 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: innowise/internship/order-service
-    ports:
-      - '8083:8080'
+    image: arseniherasimovichinnowise/order-service
     depends_on:
       - order-service-db
     networks:
