@@ -97,7 +97,6 @@ public class OrderServiceImpl implements OrderService {
                     return orderMapper.toResponse(order, userDataService.fetchUserData(order.getUserId()));
                 })
                 .toList();
-        orders.forEach(System.out::println);
         log.debug("Successfully fetched {} orders by IDs", orders.size());
         return orders;
     }

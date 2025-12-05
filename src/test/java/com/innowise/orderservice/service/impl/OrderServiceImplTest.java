@@ -123,7 +123,7 @@ class OrderServiceImplTest {
             );
 
             verify(orderRepository, times(1)).findById(order.getId());
-            verify(userDataService, times(1)).fetchUserData(any(UUID.class));
+            verify(userDataService, times(1)).fetchUserData(any(String.class));
             verify(orderMapper, times(1)).toResponse(any(Order.class), any(UserResponse.class));
         }
 
@@ -140,7 +140,7 @@ class OrderServiceImplTest {
             assertThrows(OrderNotFoundException.class, () -> orderService.getById(id));
 
             verify(orderRepository, times(1)).findById(id);
-            verify(userDataService, never()).fetchUserData(any(UUID.class));
+            verify(userDataService, never()).fetchUserData(any(String.class));
             verify(orderMapper, never()).toResponse(any(Order.class), any(UserResponse.class));
         }
     }
@@ -186,7 +186,7 @@ class OrderServiceImplTest {
             );
 
             verify(orderRepository, times(1)).findByIdIn(request);
-            verify(userDataService, times(2)).fetchUserData(any(UUID.class));
+            verify(userDataService, times(2)).fetchUserData(any(String.class));
             verify(orderMapper, times(2)).toResponse(any(Order.class), any(UserResponse.class));
         }
 
@@ -251,7 +251,7 @@ class OrderServiceImplTest {
             );
 
             verify(orderRepository, times(1)).findByStatusIn(any());
-            verify(userDataService, times(2)).fetchUserData(any(UUID.class));
+            verify(userDataService, times(2)).fetchUserData(any(String.class));
             verify(orderMapper, times(2)).toResponse(any(Order.class), any(UserResponse.class));
         }
 
@@ -433,7 +433,7 @@ class OrderServiceImplTest {
     private Order createOrderWithItems() {
         var orderItem1 = getOrderItem(UUID.randomUUID(), 1);
         var orderItem2 = getOrderItem(UUID.randomUUID(), 2);
-        var order = getOrder(new OrderCreateRequest(UUID.randomUUID(), null));
+        var order = getOrder(new OrderCreateRequest(UUID.randomUUID().toString(), null));
         order.addOrderItem(orderItem1);
         order.addOrderItem(orderItem2);
         return order;
@@ -451,7 +451,7 @@ class OrderServiceImplTest {
         );
 
         return new OrderCreateRequest(
-                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 List.of(orderItem1, orderItem2)
         );
     }
@@ -498,7 +498,7 @@ class OrderServiceImplTest {
         return orderItem;
     }
 
-    private UserResponse getUserData(UUID userId) {
+    private UserResponse getUserData(String userId) {
         return new UserResponse(
                 userId,
                 "TEST_NAME",

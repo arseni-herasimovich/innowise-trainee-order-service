@@ -21,7 +21,7 @@ public class Order {
     private UUID id;
 
     @Column(name = "userId", nullable = false)
-    private UUID userId;
+    private String userId;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
