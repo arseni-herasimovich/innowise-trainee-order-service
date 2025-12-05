@@ -11,7 +11,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record OrderResponse(
         UUID id,
-        UUID userId,
+        String userId,
         OrderStatus status,
         LocalDate creationDate,
         List<OrderItemResponse> orderItems,

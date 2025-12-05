@@ -1,10 +1,9 @@
 package com.innowise.orderservice.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 public record UserResponse(
-        UUID id,
+        String userId,
         String name,
         String surname,
         LocalDate birthDate,

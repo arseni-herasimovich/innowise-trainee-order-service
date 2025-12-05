@@ -37,12 +37,12 @@ class SecurityServiceTest {
         @DisplayName("Should create order when principal's user id is not null")
         void givenRightUserId_whenCanCreateOrder_thenReturnTrue() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
 
             var request = new OrderCreateRequest(userId, new ArrayList<>());
 
             // When
-            var result = securityService.canCreateOrder(userId.toString(), request);
+            var result = securityService.canCreateOrder(userId, request);
 
             // Then
             assertTrue(result);
@@ -51,7 +51,7 @@ class SecurityServiceTest {
         @Test
         @DisplayName("Should throw exception when principal's user id is null")
         void givenDifferentUserId_whenCanCreateOrder_thenThrowsException() {
-            var request = new OrderCreateRequest(UUID.randomUUID(), new ArrayList<>());
+            var request = new OrderCreateRequest(UUID.randomUUID().toString(), new ArrayList<>());
 
             // When, Then
             assertThrows(AccessDeniedException.class,
@@ -62,7 +62,7 @@ class SecurityServiceTest {
         @DisplayName("Should throw exception when principal's user id is null")
         void givenNoUserId_whenCanCreateOrder_thenThrowsException() {
             // Given
-            var request = new OrderCreateRequest(UUID.randomUUID(), new ArrayList<>());
+            var request = new OrderCreateRequest(UUID.randomUUID().toString(), new ArrayList<>());
 
             // When, Then
             assertThrows(AccessDeniedException.class,
@@ -89,13 +89,13 @@ class SecurityServiceTest {
         @DisplayName("Should access order only with the principal's user id")
         void givenRightId_whenCanAccessOrder_thenReturnTrue() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
             var orderId = UUID.randomUUID();
             var order = getOrder(userId);
 
             // When
             when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-            var result = securityService.canAccessOrder(userId.toString(), orderId);
+            var result = securityService.canAccessOrder(userId, orderId);
 
             // Then
             assertTrue(result);
@@ -105,7 +105,7 @@ class SecurityServiceTest {
         @DisplayName("Should throw exception when principal's user id and order's user id differ")
         void givenDifferentId_whenCanAccessOrder_thenThrowsException() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
             var order = getOrder(userId);
 
             // When, Then
@@ -152,12 +152,12 @@ class SecurityServiceTest {
         @DisplayName("Should update order when it belongs to the principal and status is created")
         void givenOrderBelongsToUserAndStatusIsCreated_whenCanManageOrder_thenReturnTrue() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
             var order = getOrder(userId);
 
             // When
             when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
-            var result = securityService.canManageOrder(userId.toString(), order.getId());
+            var result = securityService.canManageOrder(userId, order.getId());
 
             // Then
             assertTrue(result);
@@ -167,22 +167,22 @@ class SecurityServiceTest {
         @DisplayName("Should throw exception when order does not belong to the principal")
         void givenOrderDoesNotBelongToUser_whenCanManageOrder_thenThrowsException() {
             // Given
-            var userId = UUID.randomUUID();
-            var order = getOrder(UUID.randomUUID());
+            var userId = UUID.randomUUID().toString();
+            var order = getOrder(UUID.randomUUID().toString());
 
             // When
             when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
 
             // Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canManageOrder(userId.toString(), order.getId()));
+                    () -> securityService.canManageOrder(userId, order.getId()));
         }
 
         @Test
         @DisplayName("Should throw exception when order status is not CREATED")
         void givenOrderStatusIsNotCreated_whenCanManageOrder_thenThrowsException() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
             var order = getOrder(userId);
             order.setStatus(OrderStatus.PAID);
 
@@ -191,7 +191,7 @@ class SecurityServiceTest {
 
             // Then
             assertThrows(AccessDeniedException.class,
-                    () -> securityService.canManageOrder(userId.toString(), order.getId()));
+                    () -> securityService.canManageOrder(userId, order.getId()));
         }
 
         @Test
@@ -218,7 +218,7 @@ class SecurityServiceTest {
         @DisplayName("Should access orders when all belong to the principal")
         void givenAllOrdersBelongToUser_whenCanAccessOrders_thenReturnTrue() {
             // Given
-            var userId = UUID.randomUUID();
+            var userId = UUID.randomUUID().toString();
             var order1 = getOrder(userId);
             var order2 = getOrder(userId);
             var orderIds = List.of(order1.getId(), order2.getId());
@@ -226,7 +226,7 @@ class SecurityServiceTest {
 
             // When
             when(orderRepository.findByIdIn(orderIds)).thenReturn(orders);
-            var result = securityService.canAccessOrders(userId.toString(), orderIds);
+            var result = securityService.canAccessOrders(userId, orderIds);
 
             // Then
             assertTrue(result);
@@ -236,8 +236,8 @@ class SecurityServiceTest {
         @DisplayName("Should return false when some orders don't belong to the principal")
         void givenSomeOrdersDontBelongToUser_whenCanAccessOrders_thenReturnFalse() {
             // Given
-            var order1 = getOrder(UUID.randomUUID());
-            var order2 = getOrder(UUID.randomUUID());
+            var order1 = getOrder(UUID.randomUUID().toString());
+            var order2 = getOrder(UUID.randomUUID().toString());
             var orderIds = List.of(order1.getId(), order2.getId());
             var orders = List.of(order1, order2);
 
@@ -266,7 +266,7 @@ class SecurityServiceTest {
         }
     }
 
-    private Order getOrder(UUID userId) {
+    private Order getOrder(String userId) {
         return new Order(
                 UUID.randomUUID(),
                 userId,

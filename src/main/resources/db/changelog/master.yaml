@@ -9,4 +9,5 @@ databaseChangeLog:
       file: db/changelog/init/2025-11-14-001-create-indexes-orders-table.yaml
   - include:
       file: db/changelog/init/2025-11-19-001-create-indexes-items-table.yaml
-      
+  - include:
+      file: db/changelog/init/2025-12-05-001-change-user-id-type-to-varchar.yaml

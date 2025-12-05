@@ -78,7 +78,7 @@ class OrderControllerTest extends AbstractIntegrationTest {
         var orderItemRequest2 = new OrderItemRequest(item2.getId(), 3);
 
         var request = new OrderCreateRequest(
-                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 List.of(orderItemRequest1, orderItemRequest2)
         );
 
@@ -97,13 +97,13 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.id").exists(),
-                        jsonPath("$.data.userId").value(request.userId().toString()),
+                        jsonPath("$.data.userId").value(request.userId()),
                         jsonPath("$.data.status").value("CREATED"),
                         jsonPath("$.data.orderItems.length()").value(2),
                         jsonPath("$.data.orderItems[*].quantity",
                                 Matchers.containsInAnyOrder(orderItemRequest1.quantity(), orderItemRequest2.quantity())
                         ),
-                        jsonPath("$.data.userData.id").value(request.userId().toString()),
+                        jsonPath("$.data.userData.userId").value(request.userId()),
                         jsonPath("$.data.userData.name").value(getUserResponse(request.userId()).name())
                 );
 
@@ -150,10 +150,10 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.id").value(order.getId().toString()),
-                        jsonPath("$.data.userId").value(order.getUserId().toString()),
+                        jsonPath("$.data.userId").value(order.getUserId()),
                         jsonPath("$.data.status").value(order.getStatus().toString()),
                         jsonPath("$.data.orderItems.length()").value(2),
-                        jsonPath("$.data.userData.id").value(order.getUserId().toString()),
+                        jsonPath("$.data.userData.userId").value(order.getUserId()),
                         jsonPath("$.data.userData.name").value(getUserResponse(order.getUserId()).name())
                 );
     }
@@ -202,9 +202,9 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.length()").value(2),
-                        jsonPath("$.data[*].userData.id",
-                                Matchers.containsInAnyOrder(order1.getUserId().toString(),
-                                        order2.getUserId().toString())
+                        jsonPath("$.data[*].userData.userId",
+                                Matchers.containsInAnyOrder(order1.getUserId(),
+                                        order2.getUserId())
                         )
                 );
     }
@@ -250,9 +250,9 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.length()").value(2),
-                        jsonPath("$.data[*].userData.id",
-                                Matchers.containsInAnyOrder(order1.getUserId().toString(),
-                                        order2.getUserId().toString())
+                        jsonPath("$.data[*].userData.userId",
+                                Matchers.containsInAnyOrder(order1.getUserId(),
+                                        order2.getUserId())
                         )
                 );
     }
@@ -300,11 +300,11 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.id").value(order.getId().toString()),
-                        jsonPath("$.data.userId").value(order.getUserId().toString()),
+                        jsonPath("$.data.userId").value(order.getUserId()),
                         jsonPath("$.data.orderItems.length()").value(2),
                         jsonPath("$.data.orderItems[0].quantity").value(orderItemRequest1.quantity()),
                         jsonPath("$.data.orderItems[1].quantity").value(orderItemRequest2.quantity()),
-                        jsonPath("$.data.userData.id").value(order.getUserId().toString()),
+                        jsonPath("$.data.userData.userId").value(order.getUserId()),
                         jsonPath("$.data.userData.name").value(getUserResponse(order.getUserId()).name())
                 );
 
@@ -378,9 +378,9 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 .andExpectAll(
                         jsonPath("$.success").value(true),
                         jsonPath("$.data.id").value(order.getId().toString()),
-                        jsonPath("$.data.userId").value(order.getUserId().toString()),
+                        jsonPath("$.data.userId").value(order.getUserId()),
                         jsonPath("$.data.status").value(request.status().name()),
-                        jsonPath("$.data.userData.id").value(order.getUserId().toString()),
+                        jsonPath("$.data.userData.userId").value(order.getUserId()),
                         jsonPath("$.data.userData.name").value(getUserResponse(order.getUserId()).name())
                 );
 
@@ -504,7 +504,7 @@ class OrderControllerTest extends AbstractIntegrationTest {
         orderItem2.setQuantity(2);
 
         var order = new Order();
-        order.setUserId(UUID.randomUUID());
+        order.setUserId(UUID.randomUUID().toString());
         order.setStatus(OrderStatus.CREATED);
         order.setCreationDate(LocalDate.now());
         order.setOrderItems(new ArrayList<>(List.of(orderItem1, orderItem2)));
@@ -522,7 +522,7 @@ class OrderControllerTest extends AbstractIntegrationTest {
         return itemRepository.save(item);
     }
 
-    private UserResponse getUserResponse(UUID userId) {
+    private UserResponse getUserResponse(String userId) {
         return new UserResponse(
                 userId,
                 "TEST_NAME",

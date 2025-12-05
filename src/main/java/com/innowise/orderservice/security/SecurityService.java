@@ -18,7 +18,7 @@ public class SecurityService {
     private final OrderRepository orderRepository;
 
     public boolean canCreateOrder(String userId, OrderCreateRequest request) {
-        if (userId == null || request == null || !userId.equals(request.userId().toString())) {
+        if (userId == null || request == null || !userId.equals(request.userId())) {
             throw new AccessDeniedException("You do not have rights to create this order");
         }
 
@@ -31,7 +31,7 @@ public class SecurityService {
         }
 
         return orderRepository.findById(orderId)
-                .filter(order -> order.getUserId().toString().equals(userId))
+                .filter(order -> order.getUserId().equals(userId))
                 .map(order -> true)
                 .orElseThrow(() -> new AccessDeniedException("You do not have rights to access this order"));
     }
@@ -42,7 +42,7 @@ public class SecurityService {
         }
 
         return orderRepository.findById(orderId)
-                .filter(order -> order.getUserId().toString().equals(userId))
+                .filter(order -> order.getUserId().equals(userId))
                 .filter(order -> order.getStatus().equals(OrderStatus.CREATED))
                 .map(order -> true)
                 .orElseThrow(() -> new AccessDeniedException("You do not have rights to manage this order"));
@@ -54,6 +54,6 @@ public class SecurityService {
         }
 
         return orderRepository.findByIdIn(orderIds).stream()
-                .allMatch(order -> order.getUserId().toString().equals(userId));
+                .allMatch(order -> order.getUserId().equals(userId));
     }
 }
