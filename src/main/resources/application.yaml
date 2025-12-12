@@ -8,6 +8,9 @@ spring:
         enabled: true
     jpa:
         open-in-view: false
+    kafka:
+      bootstrap-servers: kafka-0:9090,kafka-1:9090,kafka-2:9090
+
 resilience4j:
   circuitbreaker:
     instances:
@@ -17,3 +20,18 @@ resilience4j:
             wait-duration-in-open-state: 15s
             permitted-number-of-calls-in-half-open-state: 5
             minimum-number-of-calls: 30
+
+kafka:
+    producer:
+      topics:
+        order-created:
+          name: ORDER_CREATED
+          partitions: 6
+          replicas: 3
+          min-insync: 2
+      acks: all
+      request-timeout: 5000
+      enable-idempotence: true
+    consumer:
+      group-id: order-service
+      trusted-packages: com.innowise.paymentservice.event

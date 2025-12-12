@@ -4,7 +4,9 @@ import com.innowise.orderservice.dto.ChangeOrderStatusRequest;
 import com.innowise.orderservice.dto.OrderCreateRequest;
 import com.innowise.orderservice.dto.OrderResponse;
 import com.innowise.orderservice.dto.OrderUpdateRequest;
+import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.enums.OrderStatus;
+import com.innowise.orderservice.event.publisher.OrderEventPublisher;
 import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.OrderRepository;
@@ -29,6 +31,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderItemService orderItemService;
     private final UserDataService userDataService;
+    private final OrderEventPublisher orderEventPublisher;
 
     /**
      * Creates a new order. Sets the creation date to the current date and status to "CREATED".
@@ -51,6 +54,10 @@ public class OrderServiceImpl implements OrderService {
         log.trace("Saving order to database");
         var savedOrder = orderRepository.save(order);
         log.debug("Order created successfully with ID: {}", savedOrder.getId());
+
+        var event = orderMapper.toOrderCreatedEvent(order, getOrderAmount(order));
+        orderEventPublisher.publishOrderCreated(event);
+
         return orderMapper.toResponse(savedOrder, userDataService.fetchUserData(order.getUserId()));
     }
 
@@ -172,7 +179,8 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * Changes the status of an existing order.
-     * @param id The order ID.
+     *
+     * @param id      The order ID.
      * @param request The change order status request.
      * @return The updated order response.
      */
@@ -212,5 +220,11 @@ public class OrderServiceImpl implements OrderService {
                 });
         orderRepository.delete(order);
         log.debug("Order deleted successfully with ID: {}", id);
+    }
+
+    private Long getOrderAmount(Order order) {
+        return order.getOrderItems().stream()
+                .mapToLong(orderItem -> orderItem.getItem().getPrice() * orderItem.getQuantity())
+                .sum();
     }
 }

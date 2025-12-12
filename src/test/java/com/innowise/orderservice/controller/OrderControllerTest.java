@@ -7,9 +7,13 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.enums.OrderStatus;
+import com.innowise.orderservice.event.OrderCreatedEvent;
 import com.innowise.orderservice.repository.ItemRepository;
 import com.innowise.orderservice.repository.OrderItemRepository;
 import com.innowise.orderservice.repository.OrderRepository;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,13 +23,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,6 +59,9 @@ class OrderControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private ConsumerFactory<String, Object> consumerFactory;
 
     @BeforeEach
     void clearRepositories() {
@@ -90,6 +101,9 @@ class OrderControllerTest extends AbstractIntegrationTest {
                                 ApiResponse.success("User fetched", getUserResponse(request.userId()))))
         ));
 
+        Consumer<String, Object> consumer = consumerFactory.createConsumer("TEST_GROUP", "TEST_CLIENT");
+        consumer.subscribe(Collections.singleton("ORDER_CREATED"));
+
         mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -110,8 +124,21 @@ class OrderControllerTest extends AbstractIntegrationTest {
         var order = orderRepository.findAll().get(0);
         assertEquals(request.userId(), order.getUserId());
         assertEquals(OrderStatus.CREATED, order.getStatus());
+
         var orderItems = orderItemRepository.findAll();
         assertEquals(2, orderItems.size());
+
+        var paymentAmount = orderItems.stream()
+                .mapToLong(orderItem -> orderItem.getItem().getPrice() * orderItem.getQuantity())
+                .sum();
+
+        ConsumerRecord<String, Object> record =
+                KafkaTestUtils.getSingleRecord(consumer, "ORDER_CREATED", Duration.ofSeconds(10));
+        var event = (OrderCreatedEvent) record.value();
+
+        assertEquals(order.getId(), event.orderId());
+        assertEquals(order.getUserId(), event.userId());
+        assertEquals(paymentAmount, event.paymentAmount());
     }
 
     @Test
@@ -123,12 +150,17 @@ class OrderControllerTest extends AbstractIntegrationTest {
                 null
         );
 
+        Consumer<String, Object> consumer = consumerFactory.createConsumer("TEST_GROUP", "TEST_CLIENT");
+        consumer.subscribe(Collections.singleton("ORDER_CREATED"));
+
         mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
         assertEquals(0, orderRepository.count());
+        ConsumerRecords<String, Object> record = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(2));
+        assertEquals(0, record.count());
     }
 
     @Test
