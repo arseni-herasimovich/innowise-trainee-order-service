@@ -4,12 +4,18 @@ import com.innowise.orderservice.dto.ItemCreateRequest;
 import com.innowise.orderservice.dto.ItemUpdateRequest;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.repository.ItemRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
@@ -26,6 +32,12 @@ class ItemControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @MockitoBean
+    protected KafkaAdmin kafkaAdmin;
+
+    @MockitoBean
+    protected KafkaListenerEndpointRegistry registry;
 
     @BeforeEach
     void clearRepositories() {
