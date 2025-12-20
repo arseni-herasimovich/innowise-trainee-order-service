@@ -5,6 +5,8 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.enums.OrderStatus;
+import com.innowise.orderservice.event.OrderCreatedEvent;
+import com.innowise.orderservice.event.publisher.OrderEventPublisher;
 import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.OrderRepository;
@@ -41,6 +43,9 @@ class OrderServiceImplTest {
     @Mock
     private UserDataService userDataService;
 
+    @Mock
+    private OrderEventPublisher orderEventPublisher;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -61,6 +66,11 @@ class OrderServiceImplTest {
 
             var userData = getUserData(request.userId());
 
+            var paymentAmount = order.getOrderItems().stream()
+                    .mapToLong(orderItem -> orderItem.getItem().getPrice() * orderItem.getQuantity())
+                    .sum();
+            var event = new OrderCreatedEvent(order.getId(), order.getUserId(), paymentAmount);
+
             // When
             when(orderMapper.toEntity(request)).thenReturn(order);
             when(orderItemService.create(request.orderItems().get(0))).thenReturn(
@@ -70,6 +80,7 @@ class OrderServiceImplTest {
             when(userDataService.fetchUserData(request.userId())).thenReturn(userData);
             when(orderRepository.save(order)).thenReturn(order);
             when(orderMapper.toResponse(order, userData)).thenReturn(getOrderResponse(order));
+            when(orderMapper.toOrderCreatedEvent(order, paymentAmount)).thenReturn(event);
 
             var orderResponse = orderService.create(request);
 
@@ -92,6 +103,8 @@ class OrderServiceImplTest {
             verify(userDataService, times(1)).fetchUserData(request.userId());
             verify(orderRepository, times(1)).save(order);
             verify(orderMapper, times(1)).toResponse(order, userData);
+            verify(orderMapper, times(1)).toOrderCreatedEvent(order, paymentAmount);
+            verify(orderEventPublisher, times(1)).publishOrderCreated(event);
         }
     }
 
@@ -175,13 +188,15 @@ class OrderServiceImplTest {
                     () -> assertEquals(order1.getUserId(), result.get(0).userId()),
                     () -> assertEquals(order1.getStatus(), result.get(0).status()),
                     () -> assertEquals(order1.getCreationDate(), result.get(0).creationDate()),
-                    () -> assertEquals(order1.getOrderItems().get(0).getItem(), result.get(0).orderItems().get(0).item()),
+                    () -> assertEquals(order1.getOrderItems().get(0).getItem(),
+                            result.get(0).orderItems().get(0).item()),
                     () -> assertEquals(userData1, result.get(0).userResponse()),
                     () -> assertEquals(order2.getId(), result.get(1).id()),
                     () -> assertEquals(order2.getUserId(), result.get(1).userId()),
                     () -> assertEquals(order2.getStatus(), result.get(1).status()),
                     () -> assertEquals(order2.getCreationDate(), result.get(1).creationDate()),
-                    () -> assertEquals(order2.getOrderItems().get(0).getItem(), result.get(1).orderItems().get(0).item()),
+                    () -> assertEquals(order2.getOrderItems().get(0).getItem(),
+                            result.get(1).orderItems().get(0).item()),
                     () -> assertEquals(userData2, result.get(1).userResponse())
             );
 
@@ -240,13 +255,15 @@ class OrderServiceImplTest {
                     () -> assertEquals(order1.getUserId(), result.get(0).userId()),
                     () -> assertEquals(order1.getStatus(), result.get(0).status()),
                     () -> assertEquals(order1.getCreationDate(), result.get(0).creationDate()),
-                    () -> assertEquals(order1.getOrderItems().get(0).getItem(), result.get(0).orderItems().get(0).item()),
+                    () -> assertEquals(order1.getOrderItems().get(0).getItem(),
+                            result.get(0).orderItems().get(0).item()),
                     () -> assertEquals(userData1, result.get(0).userResponse()),
                     () -> assertEquals(order2.getId(), result.get(1).id()),
                     () -> assertEquals(order2.getUserId(), result.get(1).userId()),
                     () -> assertEquals(order2.getStatus(), result.get(1).status()),
                     () -> assertEquals(order2.getCreationDate(), result.get(1).creationDate()),
-                    () -> assertEquals(order2.getOrderItems().get(0).getItem(), result.get(1).orderItems().get(0).item()),
+                    () -> assertEquals(order2.getOrderItems().get(0).getItem(),
+                            result.get(1).orderItems().get(0).item()),
                     () -> assertEquals(userData2, result.get(1).userResponse())
             );
 
@@ -293,7 +310,8 @@ class OrderServiceImplTest {
             var updatedOrderItem1 = getOrderItem(orderItemRequest1.itemId(), orderItemRequest1.quantity());
             var updatedOrderItem2 = getOrderItem(orderItemRequest2.itemId(), orderItemRequest2.quantity());
 
-            var updatedOrder = new Order(order.getId(), order.getUserId(), order.getStatus(), order.getCreationDate(), new ArrayList<>());
+            var updatedOrder = new Order(order.getId(), order.getUserId(), order.getStatus(), order.getCreationDate(),
+                    new ArrayList<>());
             updatedOrder.addOrderItem(updatedOrderItem1);
             updatedOrder.addOrderItem(updatedOrderItem2);
 

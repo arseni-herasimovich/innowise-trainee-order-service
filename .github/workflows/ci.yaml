@@ -33,10 +33,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          outputs: type=tar,dest=auth-service-image.tar
+          outputs: type=tar,dest=order-service-image.tar
 
       - name: Push Docker image
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
-          path: auth-service-image.tar
+          path: order-service-image.tar

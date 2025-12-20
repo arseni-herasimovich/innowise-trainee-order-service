@@ -4,6 +4,7 @@ import com.innowise.orderservice.dto.OrderCreateRequest;
 import com.innowise.orderservice.dto.OrderResponse;
 import com.innowise.orderservice.dto.UserResponse;
 import com.innowise.orderservice.entity.Order;
+import com.innowise.orderservice.event.OrderCreatedEvent;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -19,4 +20,12 @@ public interface OrderMapper {
     @Mapping(target = "userResponse", source = "user")
     @Mapping(target = "userId", source = "order.userId")
     OrderResponse toResponse(Order order, UserResponse user);
+
+    default OrderCreatedEvent toOrderCreatedEvent(Order order, Long paymentAmount) {
+        return new OrderCreatedEvent(
+                order.getId(),
+                order.getUserId(),
+                paymentAmount
+        );
+    }
 }
