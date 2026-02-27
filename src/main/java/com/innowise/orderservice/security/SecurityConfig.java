@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .securityMatcher(EndpointRequest.toAnyEndpoint())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(EndpointRequest.to("health")).permitAll()
+                        .requestMatchers(EndpointRequest.to("health", "prometheus")).permitAll()
                         .anyRequest().denyAll()
                 )
                 .csrf(AbstractHttpConfigurer::disable);
